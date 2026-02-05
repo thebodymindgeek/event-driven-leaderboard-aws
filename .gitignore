@@ -1,0 +1,21 @@
+# Terraform
+**/.terraform/*
+**/*.tfstate
+**/*.tfstate.*
+**/crash.log
+**/crash.*.log
+
+# tfvars (keep example only)
+**/terraform.tfvars
+
+# Mac
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Build artifacts (if you zip lambdas)
+dist/
+*.zip
+
