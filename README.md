@@ -1,134 +1,128 @@
+Event-Driven Leaderboard on AWS (Terraform Demo)
 
-# From Monolith to Event-Driven: AWS Leaderboard Demo
+This project demonstrates how to transform a simple monolithic-style workload into an event-driven architecture using AWS serverless services and Terraform.
 
-This repo is a portfolio demo that shows how a typical “early-stage” workflow (tight coupling, synchronous updates, limited failure isolation) can be evolved into an **event-driven** architecture on AWS using managed services.
+It implements an activity ingestion pipeline and a real-time leaderboard using DynamoDB, Lambda, SQS, EventBridge, and CloudWatch.
 
-The business scenario: employees complete activities in a wellness program; the system updates progress totals and a global leaderboard that can be viewed in a simple dashboard.
+🏗 Architecture Overview
+Data Flow
 
----
+Activities are written to DynamoDB.
 
-## What this builds (high level)
+DynamoDB Streams emits change events.
 
-- **DynamoDB** tables for events + derived state
-- **DynamoDB Streams** to capture activity inserts
-- **EventBridge Pipes** to filter/route stream records
-- **SQS (+ DLQ)** to buffer and isolate failures
-- **Lambda** for asynchronous processing + leaderboard rebuild + API read
-- **CloudWatch** logs/alarms/dashboard (if enabled in Terraform)
-- **S3** static dashboard that reads from the API
+EventBridge Pipes routes events to SQS.
 
-> Optional: add `architecture.png` in the repo root if you want a visual. The demo works without it.
+Lambda processes activities and updates aggregates.
 
----
+A scheduled Lambda rebuilds the leaderboard.
 
-## Architecture (step-by-step flow)
+A public Lambda Function URL serves leaderboard data.
 
-1. **Activity ingestion**  
-   A client (simulated by `activity-simulator` Lambda) writes activity events into the `Activities` DynamoDB table.
+A static HTML dashboard fetches and displays results.
 
-2. **Event capture**  
-   DynamoDB Streams emits change records for new activity inserts.
+All infrastructure is provisioned using Terraform.
 
-3. **Routing + buffering**  
-   EventBridge Pipes filters for `INSERT` events and pushes them to an SQS queue.
-
-4. **Asynchronous processing**  
-   `activity-processor` Lambda consumes from SQS and updates derived state:
-   - `ProgramProgress` (per employee per program)
-   - `EmployeeTotals` (global totals per employee)
-   - `ProcessedEvents` (idempotency / dedup)
-
-5. **Scheduled leaderboard refresh**  
-   `leaderboard-rebuilder` Lambda runs on a schedule (EventBridge rule) and writes a top-N snapshot to `GlobalLeaderboard` (e.g., `LEADERBOARD_ID=GLOBAL`, `AS_OF=LATEST`).
-
-6. **Serving**  
-   `getleaderboard` Lambda is exposed via a **Function URL** and returns the latest leaderboard snapshot as JSON.
-
-7. **Dashboard**  
-   A static HTML dashboard hosted in S3 calls the Function URL and renders the leaderboard.
-
----
-
-## Repo layout
-
-```txt
+📁 Repository Structure
 .
-├─ infra/          Terraform
-├─ lambdas/        Lambda source code
-├─ templates/      Dashboard template (Function URL injected by Terraform)
-├─ dist/           Local build artifacts (zip files) - NOT committed
-├─ Makefile
-└─ README.md
+├── infra/          # Terraform infrastructure
+├── lambdas/        # Lambda function source code
+├── templates/      # HTML dashboard template
+├── Makefile        # Automation commands
+└── README.md
 
-Prerequisites
-
-AWS account with permissions to create: DynamoDB, Lambda, SQS, EventBridge, IAM, CloudWatch, S3
-
-AWS CLI configured locally (aws configure or SSO)
-
-Terraform installed
-
-zip installed (only needed if you use make build)
-
-Deploy
-
-From repo root:
-
-make demo
+Generated (Not Committed)
+dist/              # Lambda ZIP packages (generated locally)
 
 
-This runs:
+The dist/ directory is created automatically during deployment and is ignored by Git.
 
-terraform fmt
+⚙️ Prerequisites
 
-terraform init
+You need:
 
-(optional) builds zip artifacts into dist/
+AWS Account
 
-terraform apply
+AWS CLI v2
 
-prints outputs
+Terraform >= 1.5
 
-If you want to run steps manually:
+Python 3.11+
 
+Git
+
+Configure AWS credentials:
+
+aws configure
+
+
+Or via environment variables.
+
+🚀 Quick Start
+1️⃣ Clone
+git clone <your-repo-url>
+cd <repo>
+
+2️⃣ Configure Terraform
+cp infra/terraform.tfvars.example infra/terraform.tfvars
+
+
+Edit values as needed.
+
+3️⃣ Deploy Infrastructure
 make init
-make build     # optional depending on packaging approach
-make deploy
+make plan
+make apply
+
+
+Terraform will:
+
+Package Lambda functions
+
+Create AWS resources
+
+Upload dashboard
+
+Configure scheduler and alarms
+
+4️⃣ Get Dashboard URL
+
+After deployment:
+
 make outputs
 
-Run the demo
-1) Generate activities
 
-Invoke the activity-simulator Lambda a few times (AWS Console → Lambda → Test/Invoke).
+Open the dashboard URL in your browser.
 
-This writes rows into the Activities table.
+5️⃣ Run Demo (Generate Activity)
 
-2) Confirm processing worked
+Invoke the activity simulator:
 
-Check DynamoDB tables:
+make simulate
 
-ProgramProgress should increment counts/points
 
-EmployeeTotals should increment totals
+Wait ~1 minute and refresh the dashboard.
 
-ProcessedEvents should contain processed event IDs
+🧩 Makefile Commands
+Command	Description
+make init	Initialize Terraform
+make fmt	Format Terraform files
+make plan	Preview infrastructure changes
+make apply	Deploy infrastructure
+make destroy	Destroy all resources
+make outputs	Show Terraform outputs
+make simulate	Run activity simulator
+🔐 Security Notes
 
-3) Confirm leaderboard updates
+The leaderboard API uses a public Lambda Function URL (demo only).
 
-Because the rebuilder runs on a schedule, within the schedule interval you should see a refreshed snapshot item in GlobalLeaderboard (e.g., GLOBAL + LATEST).
+No authentication is enabled.
 
-4) View the dashboard
+Do not use this setup in production.
 
-Open the S3 dashboard URL from Terraform outputs.
-The page fetches the Function URL and displays the top leaderboard rows.
+🧹 Cleanup
 
-Teardown
+To remove all AWS resources:
+
 make destroy
 
-Notes
-
-SQS provides buffering, failure isolation, and explicit retry semantics instead of coupling stream → lambda directly.
-
-ProcessedEvents makes the processor idempotent to handle retries and duplicate deliveries safely.
-
-Scheduled snapshot avoids doing expensive “rank top N” logic on every write and keeps reads cheap and fast.
