@@ -91,7 +91,21 @@ Edit variables as needed.
 make init
 make apply
 ```
+## ⚠️ Important: Confirm SNS Email Subscription
 
+If you enabled email notifications, AWS requires manual confirmation.
+
+After deployment:
+
+1. Check your email inbox
+2. Look for a message from AWS Notifications
+3. Click **Confirm subscription**
+
+Until this is confirmed, notifications will NOT be delivered.
+
+You can verify the subscription in:
+
+AWS Console → SNS → Topics → edl-dev-notif → Subscriptions
 ---
 
 ## Run Demo
@@ -127,16 +141,6 @@ Includes:
 - CloudWatch dashboards
 - Lambda error alarms
 - SQS backlog alerts
-
----
-
-## Design Goals
-
-- Decoupled processing
-- Fault tolerance
-- Idempotency
-- Horizontal scalability
-- Infrastructure as Code
 
 ---
 
