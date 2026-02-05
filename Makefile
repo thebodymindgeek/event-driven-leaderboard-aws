@@ -26,3 +26,11 @@ clean:
 
 # A convenience target for first-time setup (works whether you use archive_file or dist zips)
 demo: fmt init build deploy outputs
+
+simulate:
+	@echo "Invoking activity simulator..."
+	aws lambda invoke \
+	  --function-name edl-dev-activity-simulator \
+	  response.json \
+	  --log-type Tail
+	@cat response.json
