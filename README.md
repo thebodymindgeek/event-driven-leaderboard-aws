@@ -1,4 +1,4 @@
-# Event-Driven Leaderboard on AWS (Terraform Demo)
+# Event-Driven Leaderboard on AWS 
 
 This project demonstrates how to transform a simple monolithic-style workload into an event-driven, serverless architecture on AWS using Terraform.
 
