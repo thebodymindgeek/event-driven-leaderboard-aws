@@ -39,7 +39,7 @@ It simulates activity ingestion, processes events asynchronously, and builds a r
 ├── infra/
 ├── lambdas/
 ├── templates/
-├── dist/        (generated locally)
+├── dist/    
 ├── Makefile
 └── README.md
 ```
