@@ -103,9 +103,10 @@ After deployment:
 
 Until this is confirmed, notifications will NOT be delivered.
 
-You can verify the subscription in:
+You can verify the subscription in: 
 
 AWS Console → SNS → Topics → edl-dev-notif → Subscriptions
+
 ---
 
 ## Run Demo
