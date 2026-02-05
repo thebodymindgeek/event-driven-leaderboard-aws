@@ -6,7 +6,7 @@ owner      = "your-name"
 alert_email = ""
 
 enable_rebuilder_schedule     = true
-rebuilder_schedule_expression = "rate(1 minute)"
+rebuilder_schedule_rate = "rate(5 minute)"
 
 sqs_age_oldest_seconds_threshold = 120
 log_retention_days             = 14
