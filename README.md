@@ -1,128 +1,167 @@
-Event-Driven Leaderboard on AWS (Terraform Demo)
+# Event-Driven Leaderboard on AWS (Terraform Demo)
 
-This project demonstrates how to transform a simple monolithic-style workload into an event-driven architecture using AWS serverless services and Terraform.
+This project demonstrates how to transform a simple monolithic-style workload into an event-driven, serverless architecture on AWS using Terraform.
 
-It implements an activity ingestion pipeline and a real-time leaderboard using DynamoDB, Lambda, SQS, EventBridge, and CloudWatch.
+It simulates activity ingestion, processes events asynchronously, and builds a real-time leaderboard using managed AWS services.
 
-🏗 Architecture Overview
-Data Flow
+---
 
-Activities are written to DynamoDB.
+## Architecture Overview
 
-DynamoDB Streams emits change events.
+### Components
 
-EventBridge Pipes routes events to SQS.
+- Amazon DynamoDB
+- DynamoDB Streams
+- EventBridge Pipes
+- Amazon SQS
+- AWS Lambda
+- Amazon SNS
+- Amazon S3
+- Amazon CloudWatch
+- Terraform
 
-Lambda processes activities and updates aggregates.
+### Flow
 
-A scheduled Lambda rebuilds the leaderboard.
+1. Activities are written to DynamoDB  
+2. DynamoDB Streams emits events  
+3. EventBridge Pipes routes events to SQS  
+4. Lambda processes activities  
+5. Scheduled Lambda rebuilds leaderboard  
+6. Public Lambda URL serves data  
+7. Static dashboard displays results  
 
-A public Lambda Function URL serves leaderboard data.
+---
 
-A static HTML dashboard fetches and displays results.
+## Repository Structure
 
-All infrastructure is provisioned using Terraform.
-
-📁 Repository Structure
+```
 .
-├── infra/          # Terraform infrastructure
-├── lambdas/        # Lambda function source code
-├── templates/      # HTML dashboard template
-├── Makefile        # Automation commands
+├── infra/
+├── lambdas/
+├── templates/
+├── dist/        (generated locally)
+├── Makefile
 └── README.md
+```
 
-Generated (Not Committed)
-dist/              # Lambda ZIP packages (generated locally)
+---
 
+## Prerequisites
 
-The dist/ directory is created automatically during deployment and is ignored by Git.
+- AWS CLI v2
+- Terraform >= 1.5
+- Python >= 3.10
+- Make
 
-⚙️ Prerequisites
+Configure credentials:
 
-You need:
-
-AWS Account
-
-AWS CLI v2
-
-Terraform >= 1.5
-
-Python 3.11+
-
-Git
-
-Configure AWS credentials:
-
+```bash
 aws configure
+```
 
+---
 
-Or via environment variables.
+## Deployment
 
-🚀 Quick Start
-1️⃣ Clone
-git clone <your-repo-url>
-cd <repo>
+### Clone
 
-2️⃣ Configure Terraform
-cp infra/terraform.tfvars.example infra/terraform.tfvars
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+```
 
+### Build Lambdas
 
-Edit values as needed.
+```bash
+make build
+```
 
-3️⃣ Deploy Infrastructure
+### Configure Terraform
+
+```bash
+cd infra
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit variables as needed.
+
+### Deploy
+
+```bash
 make init
-make plan
 make apply
+```
 
+---
 
-Terraform will:
+## Run Demo
 
-Package Lambda functions
+### Generate Activity
 
-Create AWS resources
-
-Upload dashboard
-
-Configure scheduler and alarms
-
-4️⃣ Get Dashboard URL
-
-After deployment:
-
-make outputs
-
-
-Open the dashboard URL in your browser.
-
-5️⃣ Run Demo (Generate Activity)
-
-Invoke the activity simulator:
-
+```bash
 make simulate
+```
 
+### Rebuild Leaderboard
 
-Wait ~1 minute and refresh the dashboard.
+```bash
+make rebuild
+```
 
-🧩 Makefile Commands
-Command	Description
-make init	Initialize Terraform
-make fmt	Format Terraform files
-make plan	Preview infrastructure changes
-make apply	Deploy infrastructure
-make destroy	Destroy all resources
-make outputs	Show Terraform outputs
-make simulate	Run activity simulator
-🔐 Security Notes
+### View Dashboard
 
-The leaderboard API uses a public Lambda Function URL (demo only).
+Get URL:
 
-No authentication is enabled.
+```bash
+terraform output dashboard_url
+```
 
-Do not use this setup in production.
+Open in browser.
 
-🧹 Cleanup
+---
 
-To remove all AWS resources:
+## Monitoring
 
+Includes:
+
+- CloudWatch dashboards
+- Lambda error alarms
+- SQS backlog alerts
+
+---
+
+## Design Goals
+
+- Decoupled processing
+- Fault tolerance
+- Idempotency
+- Horizontal scalability
+- Infrastructure as Code
+
+---
+
+## Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| make build | Build Lambda packages |
+| make init | Terraform init |
+| make apply | Deploy infra |
+| make destroy | Remove infra |
+| make simulate | Generate events |
+| make rebuild | Rebuild leaderboard |
+| make fmt | Format Terraform |
+
+---
+
+## Cleanup
+
+```bash
 make destroy
+```
 
+---
+
+## License
+
+MIT
